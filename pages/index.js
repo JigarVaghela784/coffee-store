@@ -3,9 +3,11 @@ import Image from "next/image";
 import styles from "../styles/Home.module.css";
 import Banner from "../components/banner";
 import Card from "../components/card";
-import coffeeStoreData from "../data/coffeeStore.json";
-import axios from "axios";
 import fetchCoffeeStore from "../lib/coffee-store";
+import useTrackLocation from "../hooks/useTrackLocation";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setCoffeeStoreData } from "../store/action";
 
 export async function getStaticProps(context) {
   const coffeeStore = await fetchCoffeeStore();
@@ -15,9 +17,37 @@ export async function getStaticProps(context) {
 }
 
 export default function Home(props) {
-  // console.log("props", props);
+  // const [coffeeStore, setCoffeeStore] = useState([]);
+  const [coffeeStoreError, setCoffeeStoreError] = useState(null);
+  const { locationErrorMsg, handelTrackLocation, isFindingLocation } =
+    useTrackLocation();
+  const dispatch = useDispatch();
+  // const coffeeStore = useSelector(state=>state.coffeeStore);
+  // const latLong = useSelector((state) => state.latLong);
+  const {coffeeStore,latLong}=useSelector(state=>state)
+  // console.log('latlong', latLong)
+  console.log({ latLong, coffeeStore });
+
+  const fetchLocationHandler = async () => {
+    if (latLong) {
+      try {
+        const fetchCoffeeStores = await fetchCoffeeStore(latLong, 30);
+        console.log({ fetchCoffeeStores });
+        // setCoffeeStore(fetchCoffeeStores);
+        dispatch(setCoffeeStoreData(fetchCoffeeStores));
+      } catch (error) {
+        console.log({ error });
+        setCoffeeStoreError(error.message);
+      }
+    }
+  };
+  useEffect(() => {
+    fetchLocationHandler();
+  }, [latLong]);
+
   const buttonClickHandler = () => {
     console.log("The Banner Button Click");
+    handelTrackLocation();
   };
   return (
     <div className={styles.container}>
@@ -29,9 +59,11 @@ export default function Home(props) {
 
       <main className={styles.main}>
         <Banner
-          buttonText={"View Store Nearby"}
+          buttonText={isFindingLocation ? "Locating..." : "View Store Nearby"}
           buttonClick={buttonClickHandler}
         />
+        {locationErrorMsg && <p>Something Want Wrong:{locationErrorMsg}</p>}
+        {coffeeStoreError && <p>Something Want Wrong:{coffeeStoreError}</p>}
         <div className={styles.heroImage}>
           <Image
             src="/../public/static/hero-image.png"
@@ -40,8 +72,30 @@ export default function Home(props) {
             alt="hero Image"
           />
         </div>
+        {coffeeStore.length > 0 && (
+          <div className={styles.sectionWrapper}>
+            <h2 className={styles.heading2}>Store Near Me</h2>
+            <div className={styles.cardLayout}>
+              {coffeeStore.map((coffeeStore) => {
+                return (
+                  <Card
+                    key={coffeeStore.fsq_id}
+                    name={coffeeStore.name}
+                    className={styles.card}
+                    imageUrl={
+                      coffeeStore.imgUrl ||
+                      "https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+                    }
+                    href={`/coffee-store/${coffeeStore.fsq_id}`}
+                    alternate={coffeeStore.name}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
         {props.coffeeStore.length > 0 && (
-          <>
+          <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Surat Stores</h2>
             <div className={styles.cardLayout}>
               {props.coffeeStore.map((coffeeStore) => {
@@ -60,7 +114,7 @@ export default function Home(props) {
                 );
               })}
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>

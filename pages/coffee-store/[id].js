@@ -2,28 +2,33 @@ import Link from "next/link";
 import cls from "classnames";
 import { useRouter } from "next/router";
 // import coffeeStoreData from "../../data/coffeeStore.json";
+import { isEmpty } from "../../utils";
 import Head from "next/head";
 import Image from "next/image";
 import styles from "../../styles/coffee-store.module.css";
 import fetchCoffeeStore from "../../lib/coffee-store";
+import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
   const coffeeStore = await fetchCoffeeStore();
+  const findCoffeeStoreById=coffeeStore.find((coffeeStore) => {
+    return coffeeStore.id === params.id;
+  })
   return {
     props: {
-      coffeeStore: coffeeStore.find((coffeeStore) => {
-        return coffeeStore.fsq_id.toString() === params.id;
-      }),
+      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById:{}
     },
   };
 }
 export async function getStaticPaths() {
   const coffeeStore = await fetchCoffeeStore();
-  console.log("coffeeStore", coffeeStore);
+  console.log({ coffeeStore});
   const paths = coffeeStore.map((coffeeStore) => {
+    console.log({coffeeStore})
     return {
       params: {
-        id: coffeeStore.fsq_id.toString(),
+        id: coffeeStore?.id,
       },
     };
   });
@@ -33,14 +38,29 @@ export async function getStaticPaths() {
     fallback: true,
   };
 }
-const coffeeStore = (props) => {
+const CoffeeStore = (props) => {
   const router = useRouter();
-  console.log("router", router);
+  console.log("router", router.query.id);
   if (router.isFallback) {
     <div>Loading...</div>;
   }
-  const { name, neighborhood,address, imgUrl } = props.coffeeStore;
-  console.log("name", props);
+  const id=router.query.id;
+  const [coffeeStoreData, setCoffeeStoreData] = useState(props.coffeeStore)
+  const {coffeeStore}=useSelector(state=>state)
+  useEffect(() => {
+    if(isEmpty(props.coffeeStore)){
+      if(coffeeStore?.length>0){
+        console.log("first")
+        const findCoffeeStoreById=coffeeStore.find((coffeeStore) => {
+              console.log('coffeeStore', coffeeStore.fsq_id===id)  
+                return coffeeStore.fsq_id === id;
+              })
+              setCoffeeStoreData(findCoffeeStoreById)
+            }
+          }
+        }, [id])
+  
+  const { name, neighborhood,address, imgUrl } = coffeeStoreData;
   const handleUpvoteButton = () => {
     console.log("Upvote Button Clicked");
   };
@@ -109,4 +129,4 @@ const coffeeStore = (props) => {
   );
 };
 
-export default coffeeStore;
+export default CoffeeStore;
