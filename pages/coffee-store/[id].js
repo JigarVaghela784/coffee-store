@@ -12,23 +12,22 @@ import { useSelector } from "react-redux";
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
   const coffeeStore = await fetchCoffeeStore();
-  const findCoffeeStoreById=coffeeStore.find((coffeeStore) => {
-    return coffeeStore.id === params.id;
-  })
+  const findCoffeeStoreById = coffeeStore?.find((element) => {
+    return element?.fsq_id.toString() === params.id;
+  });
   return {
     props: {
-      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById:{}
+      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
     },
   };
 }
 export async function getStaticPaths() {
   const coffeeStore = await fetchCoffeeStore();
-  console.log({ coffeeStore});
-  const paths = coffeeStore.map((coffeeStore) => {
-    console.log({coffeeStore})
+  const paths = coffeeStore.map((element) => {
+    console.log({ element });
     return {
       params: {
-        id: coffeeStore?.id,
+        id: element?.fsq_id?.toString(),
       },
     };
   });
@@ -38,29 +37,55 @@ export async function getStaticPaths() {
     fallback: true,
   };
 }
-const CoffeeStore = (props) => {
+const coffeeStore = (props) => {
+  console.log("props", props);
   const router = useRouter();
   console.log("router", router.query.id);
   if (router.isFallback) {
     <div>Loading...</div>;
   }
-  const id=router.query.id;
-  const [coffeeStoreData, setCoffeeStoreData] = useState(props.coffeeStore)
-  const {coffeeStore}=useSelector(state=>state)
+  const id = router.query?.id;
+  console.log("id", typeof id);
+  const [coffeeStoreData, setCoffeeStoreData] = useState(props.coffeeStore);
+  const { coffeeStore } = useSelector((state) => state);
+  console.log('coffeeStore@@##@@', coffeeStore.length)
+
+  const handleCreateCoffeeStore = async (coffeeStore) => {
+    const{fsq_id, name, neighborhood, address, imgUrl}=coffeeStore
+    try {
+      const response =await fetch(`/api/createCoffeeStore`, {
+        method: "POST",
+        headers: { "Content-type": "application/json" },
+        body:JSON.stringify({
+          Id:fsq_id,
+          Name:name,
+          Neighborhood:neighborhood||"",
+          Address:address||"",
+          ImageUrl:imgUrl,
+          Voting:0
+        })
+      });
+      const data=await response.json();
+      console.log('data', data)
+    } catch (error) {
+      console.log({ message: "Error creating the coffee store", error });
+    }
+  };
+
   useEffect(() => {
-    if(isEmpty(props.coffeeStore)){
-      if(coffeeStore?.length>0){
-        console.log("first")
-        const findCoffeeStoreById=coffeeStore.find((coffeeStore) => {
-              console.log('coffeeStore', coffeeStore.fsq_id===id)  
-                return coffeeStore.fsq_id === id;
-              })
-              setCoffeeStoreData(findCoffeeStoreById)
-            }
-          }
-        }, [id])
-  
-  const { name, neighborhood,address, imgUrl } = coffeeStoreData;
+    if (isEmpty(props.coffeeStore)) {
+      if (coffeeStore?.length > 0) {
+        const findCoffeeStoreById = coffeeStore?.find((element) => {
+          console.log('typeof element.fsq_id', typeof element.fsq_id)
+          return element?.fsq_id?.toString() === id?.toString();
+        });
+        setCoffeeStoreData(findCoffeeStoreById);
+        handleCreateCoffeeStore(findCoffeeStoreById);
+      }
+    }
+  }, [id,coffeeStore.length]);
+  const { name, neighborhood, address, imgUrl } = coffeeStoreData;
+
   const handleUpvoteButton = () => {
     console.log("Upvote Button Clicked");
   };
@@ -129,4 +154,4 @@ const CoffeeStore = (props) => {
   );
 };
 
-export default CoffeeStore;
+export default coffeeStore;

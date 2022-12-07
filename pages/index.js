@@ -10,31 +10,28 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCoffeeStoreData } from "../store/action";
 
 export async function getStaticProps(context) {
-  const coffeeStore = await fetchCoffeeStore();
+  const coffeeStores = await fetchCoffeeStore();
   return {
-    props: { coffeeStore },
+    props: { coffeeStores },
   };
 }
 
 export default function Home(props) {
-  // const [coffeeStore, setCoffeeStore] = useState([]);
   const [coffeeStoreError, setCoffeeStoreError] = useState(null);
   const { locationErrorMsg, handelTrackLocation, isFindingLocation } =
     useTrackLocation();
   const dispatch = useDispatch();
-  // const coffeeStore = useSelector(state=>state.coffeeStore);
-  // const latLong = useSelector((state) => state.latLong);
   const {coffeeStore,latLong}=useSelector(state=>state)
-  // console.log('latlong', latLong)
   console.log({ latLong, coffeeStore });
 
   const fetchLocationHandler = async () => {
     if (latLong) {
       try {
-        const fetchCoffeeStores = await fetchCoffeeStore(latLong, 30);
-        console.log({ fetchCoffeeStores });
-        // setCoffeeStore(fetchCoffeeStores);
+        const response = await fetch(`/api/getCoffeeStoreByLocation?latLong=${latLong}&limit=30`)
+        const fetchCoffeeStores=await response.json()
+        console.log("fetchData",{ fetchCoffeeStores });
         dispatch(setCoffeeStoreData(fetchCoffeeStores));
+        setCoffeeStoreError("");
       } catch (error) {
         console.log({ error });
         setCoffeeStoreError(error.message);
@@ -94,11 +91,11 @@ export default function Home(props) {
             </div>
           </div>
         )}
-        {props.coffeeStore.length > 0 && (
+        {props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Surat Stores</h2>
             <div className={styles.cardLayout}>
-              {props.coffeeStore.map((coffeeStore) => {
+              {props.coffeeStores.map((coffeeStore) => {
                 return (
                   <Card
                     key={coffeeStore.fsq_id}
