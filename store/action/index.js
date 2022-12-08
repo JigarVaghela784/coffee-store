@@ -7,7 +7,6 @@ export const setLatLongData = (latLong) => {
   };
 };
 export const setCoffeeStoreData = (coffeeStore) => {
-  console.log('coffeeStore@@##', coffeeStore)
   return {
     type: types.SET_COFFEE_STORE,
     payload:coffeeStore,

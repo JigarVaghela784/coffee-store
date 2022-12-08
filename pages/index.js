@@ -22,18 +22,15 @@ export default function Home(props) {
     useTrackLocation();
   const dispatch = useDispatch();
   const {coffeeStore,latLong}=useSelector(state=>state)
-  console.log({ latLong, coffeeStore });
 
   const fetchLocationHandler = async () => {
     if (latLong) {
       try {
         const response = await fetch(`/api/getCoffeeStoreByLocation?latLong=${latLong}&limit=30`)
         const fetchCoffeeStores=await response.json()
-        console.log("fetchData",{ fetchCoffeeStores });
         dispatch(setCoffeeStoreData(fetchCoffeeStores));
         setCoffeeStoreError("");
       } catch (error) {
-        console.log({ error });
         setCoffeeStoreError(error.message);
       }
     }
@@ -43,7 +40,6 @@ export default function Home(props) {
   }, [latLong]);
 
   const buttonClickHandler = () => {
-    console.log("The Banner Button Click");
     handelTrackLocation();
   };
   return (
