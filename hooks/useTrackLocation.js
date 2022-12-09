@@ -28,7 +28,6 @@ const useTrackLocation = () => {
       setIsFindingLocation(false)
       setLocationErrorMsg("Geolocation is not supported by your browser");
     } else {
-      setLocationErrorMsg("Locating...");
       navigator.geolocation.getCurrentPosition(success, error);
     }
   };

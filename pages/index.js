@@ -8,6 +8,7 @@ import useTrackLocation from "../hooks/useTrackLocation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCoffeeStoreData } from "../store/action";
+import heroImage from '/public/static/hero-image.png'
 
 export async function getStaticProps(context) {
   const coffeeStores = await fetchCoffeeStore();
@@ -55,11 +56,11 @@ export default function Home(props) {
           buttonText={isFindingLocation ? "Locating..." : "View Store Nearby"}
           buttonClick={buttonClickHandler}
         />
-        {locationErrorMsg && <p>Something Want Wrong:{locationErrorMsg}</p>}
-        {coffeeStoreError && <p>Something Want Wrong:{coffeeStoreError}</p>}
+        {locationErrorMsg && <p>Something Went Wrong:{locationErrorMsg}</p>}
+        {coffeeStoreError && <p>Something Went Wrong:{coffeeStoreError}</p>}
         <div className={styles.heroImage}>
           <Image
-            src="/../public/static/hero-image.png"
+            src={heroImage.src}
             width={700}
             height={400}
             alt="hero Image"
